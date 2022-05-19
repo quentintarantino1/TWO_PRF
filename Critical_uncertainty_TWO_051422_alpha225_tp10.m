@@ -18,7 +18,7 @@ N = 11;
 R = 186;
 
 % wall oscillaiton frequency
-Tplusval = 50;
+Tplusval = 10;
 wt = 2*pi*R/Tplusval;
 
 % Oscillation amp
