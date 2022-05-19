@@ -18,7 +18,7 @@ N = 11;
 R = 186;
 
 % wall oscillaiton frequency
-Tplusval = 10;
+Tplusval = 1000;
 wt = 2*pi*R/Tplusval;
 
 % Oscillation amp
@@ -197,8 +197,8 @@ for m = -(m-1):m
 end
 
 % grid for sigma2_alpha
-% sigma2alphaval = linspace(1e-6,2.2,10);
-sigma2alphaval = 1e-3;
+sigma2alphaval = linspace(1e-6,0.1,10);
+% sigma2alphaval = 1e-3;
 
 % power iteration parameters
 lamgrd = 30;
