@@ -197,7 +197,8 @@ for m = -(m-1):m
 end
 
 % grid for sigma2_alpha
-sigma2alphaval = linspace(1e-6,2.2,10);
+% sigma2alphaval = linspace(1e-6,2.2,10);
+sigma2alphaval = 1e-3;
 
 % power iteration parameters
 lamgrd = 100;
@@ -297,7 +298,7 @@ for indkx = 1:kxgrd
             
             % bounds for sigma2
             sigma2theta_lower = 0;
-            sigma2theta_upper = 10;
+            sigma2theta_upper = 1;
             interlen = sigma2theta_upper - sigma2theta_lower;
             
             while interlen > lam_residual 
@@ -347,6 +348,10 @@ for indkx = 1:kxgrd
                                 lam(indlam) = trace(P0'*P1tmp);
                                 r = P1tmp - P0*lam(indlam);   % relative error
                                 normr = norm(r,'fro')/norm(P1tmp,'fro');
+                                if mod(indlam,50) == 0
+                                   [lam]
+                                   pause(0.1);
+                                end
                                 if normr < lam_residual
                                     break
                                 end
@@ -379,6 +384,4 @@ str3 = num2str(indkz);
 name = strcat(str1,'_indkx',str2,'_indkz',str3);
 save(name,'sigma2alphaval','sigma2thetaval')
 time = toc;
-
-rrr
 
