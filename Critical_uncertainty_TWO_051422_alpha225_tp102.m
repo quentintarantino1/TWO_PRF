@@ -18,7 +18,7 @@ N = 11;
 R = 186;
 
 % wall oscillaiton frequency
-Tplusval = 1000;
+Tplusval = 102.5;
 wt = 2*pi*R/Tplusval;
 
 % Oscillation amp
@@ -377,6 +377,8 @@ for indkx = 1:kxgrd
          [indkx,indkz]
     end
 end
+
+rrr
 
 str1 = 'sigmas';
 str2 = num2str(indkx);
