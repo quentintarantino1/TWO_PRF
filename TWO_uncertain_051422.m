@@ -127,9 +127,9 @@ ZZ = zeros(2*N, 2*N);
 
 % parameters for uncertainty gamma_alpha, gamma_theta
 % with uncertainty
-sigma2_alpha = 30;
-%sigma2_theta = 0.69;
-sigma2_theta = 0.005;
+sigma2_alpha = 0.044;
+sigma2_theta = 0.055;
+% sigma2_theta = 0.055;
 
 mu_alpha = 0;
 mu_theta = 0;
@@ -727,6 +727,38 @@ for indwt = 1:wtgrd
     Px_nuT2_avg(indwt) = sum(sum(Px_nuT2_pre(:,:,indwt),2),1)*logkxkz_scale;
     
 end
+
+%% Plotting
+figure;
+pcolor(kzval,kxval,pre_E2); 
+shading interp;
+colorbar vert;
+colormap jet; 
+set(gca,'Xscale','log','Yscale','log')
+set(gca,'fontname','cmr10','FontSize',18);
+yticks([0.1 10])
+
+figure; 
+pcolor(kzval,kxval,real(pre_E));
+shading interp;
+colorbar vert;
+colormap jet; 
+set(gca,'Xscale','log','Yscale','log')
+set(gca,'fontname','cmr10','FontSize',18);
+yticks([0.1 10])
+
+yp = R*(1-y(1:(end-1)/2));
+figure;
+plot(yp,nuT_2_avg(1:(end-1)/2));
+set(gca,'fontname','cmr10','FontSize',18);
+set(gca,'Xscale','log')
+
+figure;
+plot(yp,U2_nuT2_avg(1:(end-1)/2));
+set(gca,'fontname','cmr10','FontSize',18);
+set(gca,'Xscale','log')
+
+
 
 rrr
 

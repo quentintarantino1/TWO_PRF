@@ -18,7 +18,7 @@ N = 11;
 R = 186;
 
 % wall oscillaiton frequency
-Tplusval = 50;
+Tplusval = 1000;
 wt = 2*pi*R/Tplusval;
 
 % Oscillation amp
@@ -197,11 +197,11 @@ for m = -(m-1):m
 end
 
 % grid for sigma2_alpha
-% sigma2alphaval = linspace(1e-6,2.2,10);
-sigma2alphaval = 1e-3;
+sigma2alphaval = linspace(1e-6,5e-2,10);
+% sigma2alphaval = 1e-2;
 
 % power iteration parameters
-lamgrd = 100;
+lamgrd = 30;
 lam_residual = 1e-4;
 sigma2alphagrd = length(sigma2alphaval);
 
@@ -348,8 +348,8 @@ for indkx = 1:kxgrd
                                 lam(indlam) = trace(P0'*P1tmp);
                                 r = P1tmp - P0*lam(indlam);   % relative error
                                 normr = norm(r,'fro')/norm(P1tmp,'fro');
-                                if mod(indlam,50) == 0
-                                   [lam]
+                                if mod(indlam,10) == 0
+                                   [lam']
                                    pause(0.1);
                                 end
                                 if normr < lam_residual
@@ -377,6 +377,8 @@ for indkx = 1:kxgrd
          [indkx,indkz]
     end
 end
+
+rrr
 
 str1 = 'sigmas';
 str2 = num2str(indkx);
