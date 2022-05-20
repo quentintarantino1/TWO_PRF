@@ -197,8 +197,8 @@ for m = -(m-1):m
 end
 
 % grid for sigma2_alpha
-% sigma2alphaval = linspace(1e-6,2.2,10);
-sigma2alphaval = 2.2;
+sigma2alphaval = linspace(1e-6,1e-1,10);
+% sigma2alphaval = 2e-1;
 
 % power iteration parameters
 lamgrd = 30;
