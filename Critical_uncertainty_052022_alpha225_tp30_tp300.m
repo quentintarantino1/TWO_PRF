@@ -21,8 +21,17 @@ R = 186;
 Tplusval = linspace(30,300,10);
 tpgrd = length(Tplusval);
 
+% grid for sigma2_alpha
+sigma2alphaval = linspace(1e-6,0.1,10);
+sigma2alphagrd = length(sigma2alphaval);
+
+% power iteration parameters
+lamgrd = 30;
+lam_residual = 1e-4;
+
 % Initializing the vector for sigma2theta
-sigma2thetaval = zeros(1,tpgrd);
+sigma2thetaval = zeros(tpgrd,sigma2alphagrd,1);
+
 
 % Oscillation amp
 alpha = 2.25;
@@ -195,13 +204,6 @@ for ind_tp = 1:tpgrd
         Emat = blkdiag(Emat,ii*m*wt*I2);
     end
     
-    % grid for sigma2_alpha
-    sigma2alpha = 0.055;
-    
-    % power iteration parameters
-    lamgrd = 30;
-    lam_residual = 1e-4;
-    
     tic
     %%=====================
     %% k2 := kx^2 + kz^2 %%
@@ -276,82 +278,87 @@ for ind_tp = 1:tpgrd
     Ap1 = [A11, A12; A21, A22];
     
     %%  The crticial uncertainty
-    
-    % bounds for sigma2
-    sigma2theta_lower = 0;
-    sigma2theta_upper = 1;
-    interlen = sigma2theta_upper - sigma2theta_lower;
-    
-    while interlen > lam_residual
-        sigma2theta_mid = (sigma2theta_lower + sigma2theta_upper)/2;
-        mup1 = (1 + mu_alpha)*exp(ii*mu_theta + sigma2theta_mid/2) - 1;
-        mum1 = (1 + mu_alpha)*exp(-ii*mu_theta + sigma2theta_mid/2) - 1;
         
-        sigma2p1 = (exp(2*ii*mu_theta + sigma2theta_mid))*(sigma2alpha*exp(sigma2theta_mid) + ((1 + mu_alpha)^2)*(exp(sigma2theta_mid) - 1));
-        sigma2m1 = (exp(-2*ii*mu_theta + sigma2theta_mid))*(sigma2alpha*exp(sigma2theta_mid) + ((1 + mu_alpha)^2)*(exp(sigma2theta_mid) - 1));
-        
-        % truncated toeplitz A matrix; nwtinal
-        Abar = full(blktridiag(A0,alpha*(1+mup1)*Ap1,alpha*(1+mum1)*Am1,2*m+1))- Emat;
-        
-        eigAbar = real(eig(Abar));
-        
-        if(~sum( eigAbar > 0 ))
+        for indsigmaalpha = 1:sigma2alphagrd
             
-            % B0 matrix ;( [Am1, Ap1] )
-            bigAp1 = full(blktridiag(ZZ,alpha*Ap1,ZZ,2*m+1));
-            bigAm1 = full(blktridiag(ZZ,ZZ,alpha*Am1,2*m+1));
+            sigma2alpha = sigma2alphaval(indsigmaalpha);
             
-            B0 = [bigAm1, bigAp1];
+            % bounds for sigma2
+            sigma2theta_lower = 0;
+            sigma2theta_upper = 1;
+            interlen = sigma2theta_upper - sigma2theta_lower;
             
-            % initialization of randwt hermitian matrix P
-            P0tmp = rand(2*N*(2*m+1), 2*N*(2*m+1));
-            P0tmp = (P0tmp + P0tmp')/2;
-            eigP0min = min(real(eig(P0tmp)));
-            if eigP0min < 0
-                P0tmp = 2*abs(eigP0min)*eye(2*N*(2*m+1)) + P0tmp;
+            while interlen > lam_residual 
+                sigma2theta_mid = (sigma2theta_lower + sigma2theta_upper)/2;
+                mup1 = (1 + mu_alpha)*exp(ii*mu_theta + sigma2theta_mid/2) - 1;
+                mum1 = (1 + mu_alpha)*exp(-ii*mu_theta + sigma2theta_mid/2) - 1;
+
+                sigma2p1 = (exp(2*ii*mu_theta + sigma2theta_mid))*(sigma2alpha*exp(sigma2theta_mid) + ((1 + mu_alpha)^2)*(exp(sigma2theta_mid) - 1));
+                sigma2m1 = (exp(-2*ii*mu_theta + sigma2theta_mid))*(sigma2alpha*exp(sigma2theta_mid) + ((1 + mu_alpha)^2)*(exp(sigma2theta_mid) - 1));
+
+                % truncated toeplitz A matrix; nwtinal
+                Abar = full(blktridiag(A0,alpha*(1+mup1)*Ap1,alpha*(1+mum1)*Am1,2*m+1))- Emat;
+
+                eigAbar = real(eig(Abar));
+
+                    if(~sum( eigAbar > 0 ))
+
+                        % B0 matrix ;( [Am1, Ap1] )
+                        bigAp1 = full(blktridiag(ZZ,alpha*Ap1,ZZ,2*m+1));
+                        bigAm1 = full(blktridiag(ZZ,ZZ,alpha*Am1,2*m+1));
+
+                        B0 = [bigAm1, bigAp1];
+
+                        % initialization of randwt hermitian matrix P
+                        P0tmp = rand(2*N*(2*m+1), 2*N*(2*m+1));
+                        P0tmp = (P0tmp + P0tmp')/2;
+                        eigP0min = min(real(eig(P0tmp)));
+                        if eigP0min < 0
+                            P0tmp = 2*abs(eigP0min)*eye(2*N*(2*m+1)) + P0tmp;
+                        end
+                        P0tmp = P0tmp/ norm(P0tmp,'fro');
+
+                        P0 = [P0tmp P0tmp; P0tmp P0tmp];            
+                        Xker = lyap(Abar, B0*P0*B0');
+                        Xker = (Xker + Xker')/2;
+
+                        P1tmp = [sigma2p1*Xker, zeros(2*N*(2*m+1)); zeros(2*N*(2*m+1)), sigma2p1*Xker];
+
+                        % Power iteration for spectral radius of \cL (loop-gain) operator
+                        lam = [];
+                        
+                            for indlam = 1:lamgrd
+                                P0 = P1tmp/norm(P1tmp,'fro');
+                                Xker = lyap(Abar, B0*P0*B0');
+                                Xker = (Xker + Xker')/2;
+                                P1tmp = [sigma2m1*Xker, zeros(2*N*(2*m+1)); zeros(2*N*(2*m+1)), sigma2p1*Xker];
+                                lam(indlam) = trace(P0'*P1tmp);
+                                r = P1tmp - P0*lam(indlam);   % relative error
+                                normr = norm(r,'fro')/norm(P1tmp,'fro');
+                                if mod(indlam,10) == 0
+                                   [lam']
+                                   pause(0.1);
+                                end
+                                if normr < lam_residual
+                                    break
+                                end
+                            end
+
+                            %lam(end) = 1.00009999
+                            diff_lam = lam(end) - 1;
+
+                            if diff_lam < lam_residual % we can afford to be brave and increase sigma
+                                sigma2theta_lower = sigma2theta_mid;
+                            else % we need to be conservative and lower sigma
+                                sigma2theta_upper = sigma2theta_mid;
+                            end
+                    else
+                        sigma2theta_upper = sigma2theta_mid;
+                    end
+                interlen = sigma2theta_upper - sigma2theta_lower;    
+                disp(['indsigmaalpha = ',num2str(indsigmaalpha),'; interlen1 = ',num2str(interlen)]);
             end
-            P0tmp = P0tmp/ norm(P0tmp,'fro');
-            
-            P0 = [P0tmp P0tmp; P0tmp P0tmp];
-            Xker = lyap(Abar, B0*P0*B0');
-            Xker = (Xker + Xker')/2;
-            
-            P1tmp = [sigma2p1*Xker, zeros(2*N*(2*m+1)); zeros(2*N*(2*m+1)), sigma2p1*Xker];
-            
-            % Power iteration for spectral radius of \cL (loop-gain) operator
-            lam = [];
-            
-            for indlam = 1:lamgrd
-                P0 = P1tmp/norm(P1tmp,'fro');
-                Xker = lyap(Abar, B0*P0*B0');
-                Xker = (Xker + Xker')/2;
-                P1tmp = [sigma2m1*Xker, zeros(2*N*(2*m+1)); zeros(2*N*(2*m+1)), sigma2p1*Xker];
-                lam(indlam) = trace(P0'*P1tmp);
-                r = P1tmp - P0*lam(indlam);   % relative error
-                normr = norm(r,'fro')/norm(P1tmp,'fro');
-                if mod(indlam,10) == 0
-                    [lam']
-                    pause(0.1);
-                end
-                if normr < lam_residual
-                    break
-                end
-            end
-            
-            %lam(end) = 1.00009999
-            diff_lam = lam(end) - 1;
-            
-            if diff_lam < lam_residual % we can afford to be brave and increase sigma
-                sigma2theta_lower = sigma2theta_mid;
-            else % we need to be conservative and lower sigma
-                sigma2theta_upper = sigma2theta_mid;
-            end
-        else
-            sigma2theta_upper = sigma2theta_mid;
-        end
-        interlen = sigma2theta_upper - sigma2theta_lower;
-        disp(['ind_tp = ',num2str(ind_tp),'; interlen1 = ',num2str(interlen)]);
-    end
-    sigma2thetaval(ind_tp) = sigma2theta_mid;
+            sigma2thetaval(ind_tp,indsigmaalpha,1) = sigma2theta_mid;
+        end            
             
 end

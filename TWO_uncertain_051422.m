@@ -127,9 +127,7 @@ ZZ = zeros(2*N, 2*N);
 
 % parameters for uncertainty gamma_alpha, gamma_theta
 % with uncertainty
-sigma2_alpha = 0.044;
-sigma2_theta = 0.055;
-% sigma2_theta = 0.055;
+load CriticalPair_tp30_tp300.mat Tplusval sigma2thetaval sigma2alpha
 
 mu_alpha = 0;
 mu_theta = 0;
@@ -162,7 +160,7 @@ kzgrd  = length(kzval);
 % the period of oscillations in viscous units, T^+
 
 % Tplusval = linspace(10,300,10);
-Tplusval = 102.5;
+% Tplusval = 102.5;
 
 %%=========================================================================
 %% SECTION 3: 
